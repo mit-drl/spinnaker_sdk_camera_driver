@@ -1,4 +1,6 @@
 #include "spinnaker_sdk_camera_driver/camera.h"
+#include <chrono>
+
 
 acquisition::Camera::~Camera() {
 
@@ -39,7 +41,12 @@ void acquisition::Camera::deinit() {
 ImagePtr acquisition::Camera::grab_frame() {
     ImagePtr pResultImage;
     try{
+        std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
         pResultImage = pCam_->GetNextImage(GET_NEXT_IMAGE_TIMEOUT_);
+
+        std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+        std::cout << "Time >> GET = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
+
         // Check if the Image is complete
 
         if (pResultImage->IsIncomplete()) {
@@ -89,7 +96,12 @@ int acquisition::Camera::get_frame_id() {
 Mat acquisition::Camera::grab_mat_frame() {
 
     try{
+        std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
         ImagePtr pResultImage = grab_frame();
+        std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+        std::cout << "Time GRAB = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
+
+
         return convert_to_mat(pResultImage);
     }
     catch(Spinnaker::Exception &e){
@@ -101,22 +113,46 @@ Mat acquisition::Camera::grab_mat_frame() {
 
 Mat acquisition::Camera::convert_to_mat(ImagePtr pImage) {
 
+    std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
+
     ImagePtr convertedImage;
     if (COLOR_)
-        convertedImage = pImage->Convert(PixelFormat_BGR8); //, NEAREST_NEIGHBOR);
+        convertedImage = pImage->Convert(PixelFormat_BGR8); // , NEAREST_NEIGHBOR);
     else
 		convertedImage = pImage->Convert(PixelFormat_Mono8); //, NEAREST_NEIGHBOR);
+
+    std::chrono::steady_clock::time_point toc1 = std::chrono::steady_clock::now();
+
     unsigned int XPadding = convertedImage->GetXPadding();
     unsigned int YPadding = convertedImage->GetYPadding();
     unsigned int rowsize = convertedImage->GetWidth();
     unsigned int colsize = convertedImage->GetHeight();
+
+    std::chrono::steady_clock::time_point toc2 = std::chrono::steady_clock::now();
+
     //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding.
     Mat img;
     if (COLOR_)
         img = Mat(colsize + YPadding, rowsize + XPadding, CV_8UC3, convertedImage->GetData(), convertedImage->GetStride());
     else
         img = Mat(colsize + YPadding, rowsize + XPadding, CV_8UC1, convertedImage->GetData(), convertedImage->GetStride());
-    return img.clone();
+
+    std::chrono::steady_clock::time_point toc3 = std::chrono::steady_clock::now();
+
+    auto cloned = img.clone();
+
+    std::chrono::steady_clock::time_point toc4 = std::chrono::steady_clock::now();
+
+
+    std::cout << "Time CONVERT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc1-tic).count() << "[µs]" << std::endl;
+    std::cout << "Time PARAMS = " << std::chrono::duration_cast<std::chrono::microseconds>(toc2-toc1).count() << "[µs]" << std::endl;
+    std::cout << "Time TOMAT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc3-toc2).count() << "[µs]" << std::endl;
+    std::cout << "Time CLONE = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-toc3).count() << "[µs]" << std::endl;
+    std::cout << "Time TOTAL = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-tic).count() << "[µs]" << std::endl;
+
+
+    return cloned;
+    // return img.clone();
     // return img;
     
 }

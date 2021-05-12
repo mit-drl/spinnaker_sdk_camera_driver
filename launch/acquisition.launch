@@ -48,6 +48,8 @@
     <rosparam command="load" file="$(arg config_file)"/>
 
     <!-- Load parameters onto server using argument or default values above -->
+    <param name="to_ros"            value="$(arg to_ros)"/>
+
     <!-- <param name="exposure_time"     value="$(arg exposure_time)" />
     <param name="external_trigger"   value="$(arg external_trigger)" />
     <param name="gain"              value="$(arg gain)"/>
