@@ -29,7 +29,7 @@ acquisition::Camera::Camera(CameraPtr pCam) {
 void acquisition::Camera::init() {
 
     pCam_->Init();
-    
+
 }
 
 void acquisition::Camera::deinit() {
@@ -41,11 +41,10 @@ void acquisition::Camera::deinit() {
 ImagePtr acquisition::Camera::grab_frame() {
     ImagePtr pResultImage;
     try{
-        std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
+        // std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
         pResultImage = pCam_->GetNextImage(GET_NEXT_IMAGE_TIMEOUT_);
-
-        std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
-        std::cout << "Time >> GET = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
+        // std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+        // std::cout << "Time >> GET = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
 
         // Check if the Image is complete
 
@@ -96,11 +95,10 @@ int acquisition::Camera::get_frame_id() {
 Mat acquisition::Camera::grab_mat_frame() {
 
     try{
-        std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
+        // std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
         ImagePtr pResultImage = grab_frame();
-        std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
-        std::cout << "Time GRAB = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
-
+        // std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+        // std::cout << "Time GRAB = " << std::chrono::duration_cast<std::chrono::microseconds>(toc-tic).count() << "[µs]" << std::endl;
 
         return convert_to_mat(pResultImage);
     }
@@ -113,22 +111,20 @@ Mat acquisition::Camera::grab_mat_frame() {
 
 Mat acquisition::Camera::convert_to_mat(ImagePtr pImage) {
 
-    std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
+    // std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
     ImagePtr convertedImage;
     if (COLOR_)
         convertedImage = pImage->Convert(PixelFormat_BGR8); // , NEAREST_NEIGHBOR);
     else
 		convertedImage = pImage->Convert(PixelFormat_Mono8); //, NEAREST_NEIGHBOR);
-
-    std::chrono::steady_clock::time_point toc1 = std::chrono::steady_clock::now();
+    // std::chrono::steady_clock::time_point toc1 = std::chrono::steady_clock::now();
 
     unsigned int XPadding = convertedImage->GetXPadding();
     unsigned int YPadding = convertedImage->GetYPadding();
     unsigned int rowsize = convertedImage->GetWidth();
     unsigned int colsize = convertedImage->GetHeight();
-
-    std::chrono::steady_clock::time_point toc2 = std::chrono::steady_clock::now();
+    // std::chrono::steady_clock::time_point toc2 = std::chrono::steady_clock::now();
 
     //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding.
     Mat img;
@@ -136,48 +132,42 @@ Mat acquisition::Camera::convert_to_mat(ImagePtr pImage) {
         img = Mat(colsize + YPadding, rowsize + XPadding, CV_8UC3, convertedImage->GetData(), convertedImage->GetStride());
     else
         img = Mat(colsize + YPadding, rowsize + XPadding, CV_8UC1, convertedImage->GetData(), convertedImage->GetStride());
-
-    std::chrono::steady_clock::time_point toc3 = std::chrono::steady_clock::now();
+    // std::chrono::steady_clock::time_point toc3 = std::chrono::steady_clock::now();
 
     auto cloned = img.clone();
+    // std::chrono::steady_clock::time_point toc4 = std::chrono::steady_clock::now();
 
-    std::chrono::steady_clock::time_point toc4 = std::chrono::steady_clock::now();
-
-
-    std::cout << "Time CONVERT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc1-tic).count() << "[µs]" << std::endl;
-    std::cout << "Time PARAMS = " << std::chrono::duration_cast<std::chrono::microseconds>(toc2-toc1).count() << "[µs]" << std::endl;
-    std::cout << "Time TOMAT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc3-toc2).count() << "[µs]" << std::endl;
-    std::cout << "Time CLONE = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-toc3).count() << "[µs]" << std::endl;
-    std::cout << "Time TOTAL = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-tic).count() << "[µs]" << std::endl;
-
+    // std::cout << "Time CONVERT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc1-tic).count() << "[µs]" << std::endl;
+    // std::cout << "Time PARAMS = " << std::chrono::duration_cast<std::chrono::microseconds>(toc2-toc1).count() << "[µs]" << std::endl;
+    // std::cout << "Time TOMAT = " << std::chrono::duration_cast<std::chrono::microseconds>(toc3-toc2).count() << "[µs]" << std::endl;
+    // std::cout << "Time CLONE = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-toc3).count() << "[µs]" << std::endl;
+    // std::cout << "Time TOTAL = " << std::chrono::duration_cast<std::chrono::microseconds>(toc4-tic).count() << "[µs]" << std::endl;
 
     return cloned;
-    // return img.clone();
-    // return img;
-    
+
 }
 
 void acquisition::Camera::begin_acquisition() {
 
     ROS_DEBUG_STREAM("Begin Acquisition...");
     pCam_->BeginAcquisition();
-    
+
 }
 
 void acquisition::Camera::end_acquisition() {
 
     if (pCam_->GetNumImagesInUse())
         ROS_WARN_STREAM("Some images still currently in use! Use image->Release() before deinitializing.");
-        
+
     ROS_DEBUG_STREAM("End Acquisition...");
-    pCam_->EndAcquisition();    
-    
+    pCam_->EndAcquisition();
+
 }
 
 void acquisition::Camera::setEnumValue(string setting, string value) {
 
     INodeMap & nodeMap = pCam_->GetNodeMap();
-    
+
     // Retrieve enumeration node from nodemap
     CEnumerationPtr ptr = nodeMap.GetNode(setting.c_str());
     if (!IsAvailable(ptr) || !IsWritable(ptr))
@@ -187,21 +177,21 @@ void acquisition::Camera::setEnumValue(string setting, string value) {
     CEnumEntryPtr ptrValue = ptr->GetEntryByName(value.c_str());
     if (!IsAvailable(ptrValue) || !IsReadable(ptrValue))
         ROS_FATAL_STREAM("Unable to set " << setting << " to " << value << " (entry retrieval). Aborting...");
-		
+
     // retrieve value from entry node
     int64_t valueToSet = ptrValue->GetValue();
-		
+
     // Set value from entry node as new value of enumeration node
-    ptr->SetIntValue(valueToSet);    
+    ptr->SetIntValue(valueToSet);
 
     ROS_DEBUG_STREAM(setting << " set to " << value);
-    
+
 }
 
 void acquisition::Camera::setIntValue(string setting, int val) {
 
     INodeMap & nodeMap = pCam_->GetNodeMap();
-    
+
     CIntegerPtr ptr = nodeMap.GetNode(setting.c_str());
     if (!IsAvailable(ptr) || !IsWritable(ptr)) {
         ROS_FATAL_STREAM("Unable to set " << setting << " to " << val << " (ptr retrieval). Aborting...");
@@ -209,13 +199,13 @@ void acquisition::Camera::setIntValue(string setting, int val) {
     ptr->SetValue(val);
 
     ROS_DEBUG_STREAM(setting << " set to " << val);
-    
+
 }
 
 void acquisition::Camera::setFloatValue(string setting, float val) {
 
     INodeMap & nodeMap = pCam_->GetNodeMap();
-    
+
     CFloatPtr ptr = nodeMap.GetNode(setting.c_str());
     if (!IsAvailable(ptr) || !IsWritable(ptr)) {
         ROS_FATAL_STREAM("Unable to set " << setting << " to " << val << " (ptr retrieval). Aborting...");
@@ -223,13 +213,13 @@ void acquisition::Camera::setFloatValue(string setting, float val) {
     ptr->SetValue(val);
 
     ROS_DEBUG_STREAM(setting << " set to " << val);
-    
+
 }
 
 void acquisition::Camera::setBoolValue(string setting, bool val) {
 
     INodeMap & nodeMap = pCam_->GetNodeMap();
-    
+
     CBooleanPtr ptr = nodeMap.GetNode(setting.c_str());
     if (!IsAvailable(ptr) || !IsWritable(ptr)) {
         ROS_FATAL_STREAM("Unable to set " << setting << " to " << val << " (ptr retrieval). Aborting...");
@@ -237,7 +227,7 @@ void acquisition::Camera::setBoolValue(string setting, bool val) {
     ptr->SetValue(val);
 
     ROS_DEBUG_STREAM(setting << " set to " << val);
-    
+
 }
 
 
@@ -247,7 +237,7 @@ void acquisition::Camera::setResolutionPixels(int width, int height) {
     CIntegerPtr ptrWidth=pCam_->GetNodeMap().GetNode("Width");
     if (!IsAvailable(ptrWidth) || !IsWritable(ptrWidth)){
         ROS_FATAL_STREAM("Unable to set width" << "). Aborting...");
-        return ; 
+        return ;
     }
     int64_t widthMax = ptrWidth->GetMax();
     if(widthMax<width)
@@ -257,14 +247,14 @@ void acquisition::Camera::setResolutionPixels(int width, int height) {
 
     if (!IsAvailable(ptrHeight) || !IsWritable(ptrHeight)){
         ROS_FATAL_STREAM("Unable to set height" << "). Aborting...");
-        return ; 
+        return ;
     }
     int64_t heightMax = ptrHeight->GetMax();
     if(heightMax<height)
         height=heightMax;
 
     ROS_DEBUG_STREAM("Set Height"<<height);
-    ptrHeight->SetValue(height);                                                                                                                                 
+    ptrHeight->SetValue(height);
 }
 
 void acquisition::Camera::adcBitDepth(gcstring bitDep) {
@@ -322,9 +312,9 @@ void acquisition::Camera::setPixelFormat(gcstring formatPic) {
     if (!IsAvailable(ptrPixelEnt) || !IsReadable(ptrPixelEnt)){
         ROS_FATAL_STREAM("Unable to set RGBPoint"  << "). Aborting...");
         return ;
-    }                                                                                                                                        
+    }
     int64_t colorNum = ptrPixelEnt->GetValue();
-                                                                                                                                                
+
     ptrPixelFormat->SetIntValue(colorNum);
     ROS_DEBUG_STREAM( "Camera " << " set pixel format");
 }
@@ -332,14 +322,14 @@ void acquisition::Camera::setPixelFormat(gcstring formatPic) {
 void acquisition::Camera::trigger() {
 
     INodeMap & nodeMap = pCam_->GetNodeMap();
-    
+
     CCommandPtr ptr = nodeMap.GetNode("TriggerSoftware");
     if (!IsAvailable(ptr) || !IsWritable(ptr))
         ROS_FATAL_STREAM("Unable to execute trigger. Aborting...");
 
     ROS_DEBUG_STREAM("Executing software trigger...");
     ptr->Execute();
-    
+
 }
 
 double acquisition::Camera::getFloatValueMax(string node_string) {

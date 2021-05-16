@@ -25,7 +25,7 @@
 
 #ifdef trigger_msgs_FOUND
   #include <trigger_msgs/sync_trigger.h>
-#endif 
+#endif
 
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
@@ -34,15 +34,15 @@ using namespace cv;
 using namespace std;
 
 namespace acquisition {
-    
+
     class Capture : public nodelet::Nodelet {
 
     public:
-    
+
         ~Capture();
         Capture();
         virtual void onInit();
-        
+
         std::shared_ptr<boost::thread> pubThread_;
 
         void load_cameras();
@@ -62,25 +62,25 @@ namespace acquisition {
         void read_parameters();
         std::string todays_date();
 
-        
+
         void write_queue_to_disk(queue<ImagePtr>*, int);
         void acquire_images_to_queue(vector<queue<ImagePtr>>*);
-    
+
     private:
 
         void set_frame_rate(CameraPtr, float);
-    
+
         void create_cam_directories();
-        void save_mat_frames(int);
+        void save_mat_frames(int, int);
         void save_binary_frames(int);
         void get_mat_images();
         void update_grid();
         void export_to_ROS();
         void dynamicReconfigureCallback(spinnaker_sdk_camera_driver::spinnaker_camConfig &config, uint32_t level);
-       
+
         float mem_usage();
-    
-        SystemPtr system_;    
+
+        SystemPtr system_;
         CameraList camList_;
         vector<acquisition::Camera> cams;
         vector<string> cam_ids_;
@@ -99,7 +99,7 @@ namespace acquisition {
         vector<string> imageNames;
         vector<bool> flip_horizontal_vec_;
         vector<bool> flip_vertical_vec_;
-           
+
         string path_;
         string todays_date_;
 
@@ -119,9 +119,9 @@ namespace acquisition {
         double target_grey_value_;
         bool first_image_received;
         // int decimation_;
-        string tf_prefix_;        
+        string tf_prefix_;
         int soft_framerate_; // Software (ROS) frame rate
-        
+
         int MASTER_CAM_;
         int CAM_; // active cam during live
         int image_width_;
@@ -144,10 +144,10 @@ namespace acquisition {
         bool PUBLISH_CAM_INFO_;
         bool VERIFY_BINNING_;
         uint64_t SPINNAKER_GET_NEXT_IMAGE_TIMEOUT_;
-        
+
         #ifdef trigger_msgs_FOUND
             ros::Time latest_imu_trigger_time_;
-            uint32_t prev_imu_trigger_count_ = 0; 
+            uint32_t prev_imu_trigger_count_ = 0;
             uint32_t latest_imu_trigger_count_;
 
             void assignTimeStampCallback(const trigger_msgs::sync_trigger::ConstPtr& msg);
@@ -158,8 +158,8 @@ namespace acquisition {
             std::vector<std::queue<SyncInfo_>> sync_message_queue_vector_;
             ros::Subscriber timeStamp_sub;
         #endif
-        
-        
+
+
         bool region_of_interest_set_;
         int region_of_interest_width_;
         int region_of_interest_height_;
@@ -169,7 +169,7 @@ namespace acquisition {
         // grid view related variables
         bool GRID_CREATED_;
         Mat grid_;
-    
+
         // ros variables
         ros::NodeHandle nh_;
         ros::NodeHandle nh_pvt_;
@@ -182,11 +182,13 @@ namespace acquisition {
         vector<image_transport::CameraPublisher> camera_image_pubs;
         //vector<ros::Publisher> camera_info_pubs;
 
-		
+        vector<std::ofstream> camera_timestamp_logs;
+        vector<VideoWriter> camera_video_streams;
+
         vector<sensor_msgs::ImagePtr> img_msgs;
         vector<sensor_msgs::CameraInfoPtr> cam_info_msgs;
         spinnaker_sdk_camera_driver::SpinnakerImageNames mesg;
-        boost::mutex queue_mutex_;  
+        boost::mutex queue_mutex_;
     };
 
 }
