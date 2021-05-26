@@ -238,16 +238,16 @@ void acquisition::Capture::load_cameras() {
                 // std::cout << image_width_ <<std::endl;
 
                 if (SAVE_) {
-                  if (!CAM_DIRS_CREATED_)
-                      create_cam_directories();
+                  //if (!CAM_DIRS_CREATED_)
+                  //    create_cam_directories();
 
                   // Create an output to log the capture timestamps
-                  std::ofstream time_file(path_ + "/" + cam_names_[j] + "/" + "timestamps.csv");
-                  time_file << "camera_time,ros_time" << "\n";
+                  std::ofstream time_file(path_ + "/" + cam_names_[j] + ".csv");
+                  time_file << "#camera_time,ros_time" << "\n";
                   camera_timestamp_logs.push_back(std::move(time_file));
 
 
-                  VideoWriter camera_video_stream(path_ + "/" + cam_names_[j] + "/" + "video.avi",
+                  VideoWriter camera_video_stream(path_ + cam_names_[j] + ".avi",
                                     cv::VideoWriter::fourcc('H','2','6','4'),
                                     soft_framerate_,
                                     Size(image_width_, image_height_));
@@ -866,8 +866,8 @@ void acquisition::Capture::save_mat_frames(int dump, int count) {
 
     double t = ros::Time::now().toSec();
 
-    if (!CAM_DIRS_CREATED_)
-        create_cam_directories();
+    //if (!CAM_DIRS_CREATED_)
+    //    create_cam_directories();
 
     string timestamp_from_camera;
     for (unsigned int i = 0; i < numCameras_; i++) {
@@ -895,12 +895,14 @@ void acquisition::Capture::save_mat_frames(int dump, int count) {
             camera_video_streams[i].write(frames_[i]);
 
 
-            ostringstream filename;
-            filename << path_ << "/" << cam_names_[i] << "/" << "frames" << "/" << count << ext_;
-            ROS_DEBUG_STREAM("Saving image at " << filename.str());
-            //ros image names
-            mesg.name.push_back(filename.str());
-            imwrite(filename.str(), frames_[i]);
+
+            // // SAVE THE IMAGES AS INDIVIDUAL FILES
+            // ostringstream filename;
+            // filename << path_ << "/" << cam_names_[i] << "/" << "frames" << "/" << count << ext_;
+            // ROS_DEBUG_STREAM("Saving image at " << filename.str());
+            // //ros image names
+            // mesg.name.push_back(filename.str());
+            // imwrite(filename.str(), frames_[i]);
 
         }
 
@@ -964,8 +966,8 @@ void acquisition::Capture::save_binary_frames(int dump) {
 
     double t = ros::Time::now().toSec();
 
-    if (!CAM_DIRS_CREATED_)
-        create_cam_directories();
+    //if (!CAM_DIRS_CREATED_)
+    //    create_cam_directories();
 
     string timestamp;
     for (unsigned int i = 0; i < numCameras_; i++) {
